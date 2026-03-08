@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sorgs.de: Choose a website</title>
+</head>
+
+<body>
+    <div class="container">
+        <h1>sorgs.de site selector</h1>
+        <div id="site-options">
+            <div class="radio-option">
+                <input type="radio" name="site-selection" id="site-manfred" value="https://data-architect.sorgs.de/">
+                <label for="site-manfred">
+                    <h2>Manfred Sorg, Independent Data Architect</h2>
+                    <p>
+                        New professional development as self-employed freelancer in the field of data architecture, data
+                        strategy and AI.<br/>
+                        Located in Mainz, Germany.
+                    </p>
+                </label>
+            </div>
+            <div class="radio-option">
+                <input type="radio" name="site-selection" id="site-silke" value="https://sisowi.de/">
+                <label for="site-silke">
+                    <h2>Silke Sorg-Wildt, Heilpraktikerin</h2>
+                    <p>
+                        Heilpraktikerin in Alzey, Germany.
+                    </p>
+                </label>
+            </div>
+            <div class="radio-option">
+                <input type="radio" name="site-selection" id="site-familie" value="https://www.sorgs.de/">
+                <label for="site-familie">
+                    <h2>Familien Website</h2>
+                    <p lang="en">
+                        Private website with content collected and developed through various years about history, maths and web design.
+                    </p>
+                    <p lang="de">
+                        Privates Webprojekt mit Inhalten, die über die Jahre gesammelt und entwickelt wurden, über Geschichte, Mathematik und Webdesign.
+                    </p>
+                </label>
+            </div>
+            <div class="radio-option">
+                <input type="radio" name="site-selection" id="site-github-pages" value="https://sorgm.github.io/">
+                <label for="site-github-pages">
+                    <h2>GitHub Pages</h2>
+                    <p lang="en">
+                        Several projects and archives made visible through GitHub Pages.
+                    </p>
+                    <p lang="de">
+                        Mehrere Projekte und Archive, die durch GitHub Pages sichtbar gemacht werden.
+                    </p>
+                </label>
+            </div>
+        </div>
+        <div class="remember-container">
+            <label>
+                <input type="checkbox" id="remember-checkbox" disabled>
+                <span lang="en">Remember this selection</span>
+                <span lang="de">Diese Auswahl merken</span>
+            </label>
+        </div>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'selectedSite';
+        const REDIRECT_DELAY = 1000; // 1 second
+        const PRESELECT_DELAY = 2000; // 2 seconds for preselected items
+
+        let redirectTimeout = null;
+
+        function checkForRememberedSelection() {
+            const remembered = localStorage.getItem(STORAGE_KEY);
+            if (remembered) {
+                const el = document.querySelector(`input[name="site-selection"][value="${remembered}"]`);
+                if (!el) {
+                    localStorage.removeItem(STORAGE_KEY);
+                    return;
+                }
+                el.checked = true;
+                document.getElementById('remember-checkbox').checked = true;
+                setStatus(`Redirecting to ${remembered} in ${PRESELECT_DELAY / 1000} seconds...`, 'loading');
+                redirectTimeout = setTimeout(() => redirect(remembered), PRESELECT_DELAY);
+            }
+        }
+
+        function initEventListeners() {
+            const inputs = Array.from(document
+                .getElementById('site-options')
+                .querySelectorAll('input[type="radio"]'));
+            inputs.forEach(input => {
+                input.addEventListener('change', function () {
+                    if (this.checked) {
+                        clearTimeout(redirectTimeout);
+                        const siteName = this.value;
+                        setStatus(`Redirecting to ${siteName} in ${REDIRECT_DELAY / 1000} seconds...`, 'loading');
+                        redirectTimeout = setTimeout(() => redirect(siteName), REDIRECT_DELAY);
+                    }
+                });
+            });
+            document.getElementById('remember-checkbox').disabled = false;
+        }
+
+        function setStatus(message, className = '') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = className;
+        }
+
+        function redirect(siteName) {
+            window.location.href = siteName;
+        }
+
+        document.getElementById('remember-checkbox').addEventListener('change', function () {
+            clearTimeout(redirectTimeout);
+            const selectedRadio = document.querySelector('input[name="site-selection"]:checked');
+            const siteName = selectedRadio ? selectedRadio.value : null;
+
+            if (this.checked) {
+                if (siteName) {
+                    localStorage.setItem(STORAGE_KEY, siteName);
+                    setStatus(`Selection remembered: ${siteName}. Redirecting in ${REDIRECT_DELAY / 1000} seconds...`, 'loading');
+                    redirectTimeout = setTimeout(() => redirect(siteName), REDIRECT_DELAY);
+                }
+            } else {
+                localStorage.removeItem(STORAGE_KEY);
+                if (siteName) {
+                    setStatus('Selection cleared from memory.', 'success');
+                } else {
+                    setStatus('');
+                }
+            }
+        });
+
+        function checkLanguage() {
+            const userLang = navigator.language || navigator.userLanguage;
+            if (userLang.startsWith('de')) {
+                document.documentElement.lang = 'de';
+            } else {
+                document.documentElement.lang = 'en';
+            }
+            document.querySelectorAll('[lang]').forEach(el => {
+                if (el.getAttribute('lang') !== document.documentElement.lang) {
+                    el.style.display = 'none';
+                }
+            });
+        }
+
+        checkLanguage();
+        checkForRememberedSelection();
+        initEventListeners();
+    </script>
+</body>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 2rem;
+        background-color: darkgray;
+        color: whitesmoke;
+    }
+
+    .container {
+        border: none;
+        padding: 2rem;
+        border-radius: 5px;
+        background-color: darkgray;
+        color: whitesmoke;
+    }
+
+    h1 {
+        margin-top: 0;
+        display: none;
+    }
+
+    a {
+        text-decoration: none;
+        color: whitesmoke;
+    }
+
+    a:hover {
+        text-decoration: underline;
+    }
+
+    #site-options {
+        margin-bottom: 1rem;
+        border: 1px solid whitesmoke;
+        border-radius: 5px;
+        padding: 1rem;
+    }
+
+    .radio-option {
+        display: inline-block;
+        width: 30rem;
+        height: 100%;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 3px;
+        transition: background-color 0.2s;
+    }
+
+    .radio-option:hover {
+        background-color: darkblue;
+    }
+
+    .radio-option input[type="radio"] {
+        display: none
+    }
+
+    .radio-option label {
+        cursor: pointer;
+        margin: 0;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        font-size: 0.95rem;
+    }
+
+    .radio-option input[type="radio"]:checked+label {
+        background-color: #0366d6;
+        color: white;
+    }
+
+    .radio-name {
+        font-weight: bold;
+    }
+
+    .radio-description {
+        font-size: 0.85rem;
+        color: #bbb;
+        margin-top: 0.25rem;
+    }
+
+    .remember-container {
+        margin-bottom: 1rem;
+    }
+
+    .remember-container input[type="checkbox"] {
+        margin-right: 0.5rem;
+        cursor: pointer;
+    }
+</style>
+
+</html>
